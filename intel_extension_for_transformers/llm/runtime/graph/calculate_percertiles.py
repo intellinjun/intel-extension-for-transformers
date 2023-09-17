@@ -49,6 +49,7 @@ if __name__ == "__main__":
     predictions = parse_output_file(output_file)
     first_token_latency = predictions[0]
     p90 = calculate_percentile(predictions, 90)
+    p90 = calculate_percentile(predictions, 95)
     p99 = calculate_percentile(predictions, 99)
     latency_mean = calculate_mean(predictions[1:])
     total_latency = np.sum(predictions)
@@ -82,6 +83,7 @@ if __name__ == "__main__":
         f.write("{:.2f},".format(memory_mean))
         f.write(link + ",")
         f.write("{:.2f},".format(p90))
+        f.write("{:.2f},".format(p95))
         f.write("{:.2f},".format(p99))
         #f.write(",latency:")
         #for latency in predictions:

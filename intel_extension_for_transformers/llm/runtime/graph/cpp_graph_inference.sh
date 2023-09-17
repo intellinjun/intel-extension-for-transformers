@@ -4,8 +4,8 @@ cores_list=(32 48)
 #cores_list=(48)
 batch_size_list=(1)
 #input_list=(10 32 1024 2012)
-input_list=(32 1024 2012)
-output_list=(32)
+input_list=(100)
+output_list=(32, 100)
 beam_list=(1)
 
 
@@ -37,8 +37,8 @@ function main() {
         convert_script="${working_dir}/scripts/convert_gptneox.py"
         quant_script="./build/bin/quant_gptneox"
         infer_cmd="./build/bin/run_gptneox"
-        input_model="/tf_dataset2/models/nlp_toolkit/gpt-neox-20b"
-        precision_list=("q4_j_b128" "q4_j_b32" "q4_0")
+        input_model="/mnt/disk1/data2/zhenweil/models/gpt_neox/gpt-neox-20b/"
+        precision_list=("q4_j_b128" "q4_j_channel" "q8_j_b128" "q8_j_channel")
     elif [[ "${model}" == "mpt-7b" ]]; then
         convert_script="${working_dir}/scripts/convert_mpt.py"
         quant_script="./build/bin/quant_mpt"
@@ -124,9 +124,8 @@ function main() {
                         else
                             prompt="Once upon a time, there existed a little girl, who liked to have adventures. She wanted to go to places and meet new people, and have fun."
                         fi
-                    elif [[ "${input}" == "10" ]]; then
-                        prompt="Once upon a time, there existed a "
-                        output=1024
+                    elif [[ "${input}" == "100" ]]; then
+                        prompt="Once upon a time, there existed a little girl who liked to have adventures. She wanted to go to places and meet new people, and have fun.And one day she went with her mother in search of adventure to an exotic land unknown to them, but they never returned. The next day, her relatives started searching for her, and that is how the little girl ended up in a strange town called San Diego, with no family or friends, and a lot of "
                     elif [[ "${input}" == "2012" ]]; then
                         if [[ "${model}" == "chatglm2" || "${model}" == "chatglm-6b" ]]; then
                             prompt="你好"
@@ -162,6 +161,8 @@ function main() {
                         ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 4 --block_size 32 --scale_dtype fp32 --compute_type int8 --alg sym
                     elif [[ ${precision} == "q4_j_b128" ]]; then
                         ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 4 --block_size 128 --scale_dtype fp32 --compute_type int8 --alg sym
+                    elif [[ ${precision} == "q4_j_channel" ]]; then
+                        ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 4 --block_size -1 --scale_dtype fp32 --compute_type int8 --alg sym
                     elif [[ ${precision} == "q4_j_b128_asym" ]]; then
                         ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 4 --block_size 128 --scale_dtype fp32 --compute_type int8 --alg asym
                     elif [[ ${precision} == "q4_0" ]]; then    
@@ -170,6 +171,10 @@ function main() {
                         ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 4 --block_size 32 --compute_type ggml --alg asym
                     elif [[ ${precision} == "q8_0" ]]; then
                         ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 8 --block_size 32 --compute_type ggml --alg sym
+                    elif [[ ${precision} == "q8_j_b128" ]]; then
+                        ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 8 --block_size 128  --scale_dtype fp32 --compute_type int8 --alg sym 
+                    elif [[ ${precision} == "q8_j_channel" ]]; then
+                        ${quant_script} --model_file ${working_dir}/${model}-fp32.bin --out_file ${working_dir}/${model}-${precision}.bin --bits 8 --block_size -1  --scale_dtype fp32 --compute_type int8 --alg sym
                     fi
                     echo "=======  Quantization End  ======="
                     ## run inference
